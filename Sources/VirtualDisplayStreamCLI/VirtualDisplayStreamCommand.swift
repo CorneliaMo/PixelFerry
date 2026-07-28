@@ -56,7 +56,8 @@ struct VirtualDisplayStreamCommand {
             var address = addressPointer.pointee
             var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
             if getnameinfo(&address, socklen_t(item.ifa_addr.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
-                result.append(String(cString: host))
+                let bytes = host.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+                result.append(String(decoding: bytes, as: UTF8.self))
             }
         }
         return Array(Set(result)).sorted()

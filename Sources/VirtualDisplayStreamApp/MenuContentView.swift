@@ -4,7 +4,6 @@ import SwiftUI
 struct MenuContentView: View {
     @ObservedObject var model: StreamAppModel
     @ObservedObject var settings: SettingsStore
-    @State private var showAdvanced = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -64,11 +63,9 @@ struct MenuContentView: View {
                 Toggle("HiDPI", isOn: settings.binding(\.hiDPI))
                 Toggle("Show cursor", isOn: settings.binding(\.showCursor))
             }
-            DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
-                TextField("Chromium helper directory", text: settings.binding(\.chromiumDirectory))
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.top, 6)
-            }
+            Text("Advanced").font(.caption).foregroundStyle(.secondary)
+            TextField("Chromium helper directory", text: settings.binding(\.chromiumDirectory))
+                .textFieldStyle(.roundedBorder)
             Button {
                 Task { await model.start(settings: settings.value) }
             } label: {
@@ -169,7 +166,7 @@ struct MenuContentView: View {
         }
     }
 
-    private func numberField<Value: BinaryInteger>(_ title: String, value: Binding<Value>) -> some View {
+    private func numberField(_ title: String, value: Binding<Int>) -> some View {
         TextField(title, value: value, format: .number)
             .textFieldStyle(.roundedBorder)
     }

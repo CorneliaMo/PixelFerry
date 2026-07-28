@@ -1,4 +1,4 @@
-This project includes private CoreGraphics API declarations and implementation
+PixelFerry includes private CoreGraphics API declarations and implementation
 patterns derived from these MIT-licensed projects:
 
 - DeskPad, copyright Bastian Andelefski and contributors
@@ -6,14 +6,15 @@ patterns derived from these MIT-licensed projects:
 - VirtualDisplayKit, copyright Dustin Nielson and contributors
   https://github.com/xocialize/VirtualDisplayKit
 
-Their copyright notices are preserved in this project's LICENSE file.
+Their copyright notices are preserved in PixelFerry's LICENSE file.
 Deskreen is AGPL-3.0 and was consulted only for high-level architectural
 research; its code is not incorporated into this implementation.
 
-This project depends on WebRTC binaries packaged by stasel/WebRTC and on the
+The experimental native backend depends on WebRTC binaries packaged by
+stasel/WebRTC and on the
 Swifter HTTP/WebSocket server. Both are distributed under BSD 3-Clause terms;
 their full license notices are available in the dependency distributions.
 
-The Chromium helper uses Electron, Express, Socket.IO, simple-peer,
+PixelFerry Streamer uses Electron, Express, Socket.IO, simple-peer,
 pixelmatch, and esbuild. Their notices are available in installed npm packages.
 It is an original implementation and does not incorporate Deskreen code.

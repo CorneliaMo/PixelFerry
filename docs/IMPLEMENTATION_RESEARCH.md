@@ -1,5 +1,7 @@
 # macOS 虚拟显示器与网络镜像实现研究
 
+> **历史研究文档。** 本文记录项目立项时的候选架构，不代表 PixelFerry 0.1.0 的当前实现。当前默认路线是：Swift 创建虚拟显示器，内嵌的无 Dock Electron helper 使用 Chromium 捕获并通过 WebRTC 向浏览器串流；原生 ScreenCaptureKit/libwebrtc 路线仅作为实验性 CLI 后端保留。当前架构请参阅 [`Documentation/ARCHITECTURE.md`](../Documentation/ARCHITECTURE.md)。
+
 > 研究基线：DeskPad `c3349f0`（2026-02-28），VirtualDisplayKit `32227f2`（2026-04-16），Deskreen `b5dc3d4` / 3.2.16（2026-07-08）。本文基于对应源码快照，私有 API 随 macOS 更新可能改变，必须按目标系统实测。
 
 ## 1. 结论先行

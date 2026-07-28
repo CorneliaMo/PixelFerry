@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "VirtualDisplayStream",
+    name: "PixelFerry",
     platforms: [.macOS(.v15)],
     products: [
-        .library(name: "VirtualDisplayCore", targets: ["VirtualDisplayCore"]),
-        .executable(name: "virtual-display-stream", targets: ["VirtualDisplayStreamCLI"]),
-        .executable(name: "virtual-display-stream-app", targets: ["VirtualDisplayStreamApp"]),
+        .library(name: "PixelFerryCore", targets: ["PixelFerryCore"]),
+        .executable(name: "pixelferry", targets: ["PixelFerryCLI"]),
+        .executable(name: "PixelFerry", targets: ["PixelFerryApp"]),
     ],
     dependencies: [
         .package(url: "https://github.com/stasel/WebRTC.git", exact: "150.0.0"),
@@ -19,7 +19,7 @@ let package = Package(
     targets: [
         .target(name: "CVirtualDisplayPrivate", publicHeadersPath: "include"),
         .target(
-            name: "VirtualDisplayCore",
+            name: "PixelFerryCore",
             dependencies: [
                 "CVirtualDisplayPrivate",
                 .product(name: "WebRTC", package: "WebRTC"),
@@ -32,15 +32,20 @@ let package = Package(
                 .linkedFramework("ScreenCaptureKit"),
             ]
         ),
-        .executableTarget(name: "VirtualDisplayStreamCLI", dependencies: ["VirtualDisplayCore"]),
+        .executableTarget(name: "PixelFerryCLI", dependencies: ["PixelFerryCore"]),
         .executableTarget(
-            name: "VirtualDisplayStreamApp",
-            dependencies: ["VirtualDisplayCore"],
+            name: "PixelFerryApp",
+            dependencies: ["PixelFerryCore"],
+            resources: [.process("Resources")],
             linkerSettings: [
                 .linkedFramework("AppKit"), .linkedFramework("CoreImage"),
                 .linkedFramework("CoreGraphics"), .linkedFramework("SwiftUI"),
+                .unsafeFlags([
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "@executable_path/../Frameworks",
+                ]),
             ]
         ),
-        .testTarget(name: "VirtualDisplayCoreTests", dependencies: ["VirtualDisplayCore"]),
+        .testTarget(name: "PixelFerryCoreTests", dependencies: ["PixelFerryCore"]),
     ]
 )

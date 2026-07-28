@@ -20,7 +20,15 @@ swift build -c release
 
 The command prints viewer URLs for active non-loopback IPv4 interfaces. Open `http://<Mac-IP>:8080/` on another device in the trusted LAN. The page connects automatically and exposes live sender/receiver diagnostics—including codec, resolution, throughput, recent playout delay, RTT, loss, QP, Chromium's quality-limitation reason, and the latest Auto decision—plus fullscreen, reconnect, and diagnostics-copy controls.
 
-The helper uses Chromium `desktopCapturer`/`getUserMedia` and `simple-peer`, with manual 100%/50% modes and an experimental Auto mode. Auto combines motion, receiver buffering/loss, sender RTT, encoding time, and Chromium limitation signals; it currently adjusts sender bitrate/FPS while retaining native capture resolution. Use `--chromium-directory <path>` when launching outside the repository root. The earlier ScreenCaptureKit/libwebrtc path remains available through `--backend native`.
+For the native menu-bar interface, run:
+
+```bash
+.build/release/virtual-display-stream-app
+```
+
+The menu-bar app persists display and streaming settings, shows helper/viewer status, provides LAN addresses and a QR code, and links to Screen Recording settings. It runs as an accessory application without a Dock icon. Electron remains a hidden capture/WebRTC helper and is also removed from the Dock.
+
+The helper uses Chromium `desktopCapturer`/`getUserMedia` and `simple-peer`, with manual 100%/50% modes and an experimental Auto mode. Auto combines motion, receiver buffering/loss, sender RTT, encoding time, and Chromium limitation signals. It first adjusts sender bitrate/FPS, then uses guarded 75%/50% capture transitions under sustained pressure. Use `--chromium-directory <path>` when launching outside the repository root. The earlier ScreenCaptureKit/libwebrtc path remains available through `--backend native`.
 
 If Electron reports an incomplete installation, rerun `npm install` in `ChromiumStreamer`. The launcher uses Electron's supported CLI entry point instead of assuming a version-specific `.app` layout.
 

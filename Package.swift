@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "VirtualDisplayCore", targets: ["VirtualDisplayCore"]),
         .executable(name: "virtual-display-stream", targets: ["VirtualDisplayStreamCLI"]),
+        .executable(name: "virtual-display-stream-app", targets: ["VirtualDisplayStreamApp"]),
     ],
     dependencies: [
         .package(url: "https://github.com/stasel/WebRTC.git", exact: "150.0.0"),
@@ -32,6 +33,14 @@ let package = Package(
             ]
         ),
         .executableTarget(name: "VirtualDisplayStreamCLI", dependencies: ["VirtualDisplayCore"]),
+        .executableTarget(
+            name: "VirtualDisplayStreamApp",
+            dependencies: ["VirtualDisplayCore"],
+            linkerSettings: [
+                .linkedFramework("AppKit"), .linkedFramework("CoreImage"),
+                .linkedFramework("CoreGraphics"), .linkedFramework("SwiftUI"),
+            ]
+        ),
         .testTarget(name: "VirtualDisplayCoreTests", dependencies: ["VirtualDisplayCore"]),
     ]
 )

@@ -1,45 +1,55 @@
-# virtual-display-stream
+# PixelFerry
 
-An experimental macOS 15 command-line MVP that creates one virtual display and streams it to a browser over WebRTC. The default backend delegates capture and WebRTC to Chromium while Swift owns the virtual-display lifecycle. Signaling and the viewer page use unencrypted HTTP/WebSocket, so it is intended only for a trusted LAN.
+PixelFerry creates a configurable virtual display on macOS and ferries its pixels to a browser on the local network with low-latency WebRTC. The menu-bar app is the primary product; the `pixelferry` command remains available for development and automation.
+
+> PixelFerry uses private `CGVirtualDisplay` APIs. It targets macOS 15, is distributed outside the Mac App Store, and may require updates when macOS changes.
 
 ## Requirements
 
-- Apple Silicon Mac running macOS 15
-- Xcode 16 command-line tools
-- Node.js and npm for the default Chromium backend
-- Screen Recording permission for Electron when using the default backend, or for the executable when using `--backend native`
-- A current Safari, Chrome, Firefox, or Edge browser on the viewing device
+- macOS 15 or newer on Apple silicon or Intel
+- Xcode 16 or newer
+- Node.js 22 and npm for source builds
+- Screen Recording permission
+- A modern browser on the same trusted LAN
 
-## Build and run
-
-```bash
-cd ChromiumStreamer && npm install && npm run build && cd ..
-swift build -c release
-.build/release/virtual-display-stream --backend chromium --width 1920 --height 1080 --fps 60 --port 8080
-```
-
-The command prints viewer URLs for active non-loopback IPv4 interfaces. Open `http://<Mac-IP>:8080/` on another device in the trusted LAN. The page connects automatically and exposes live sender/receiver diagnostics—including codec, resolution, throughput, recent playout delay, RTT, loss, QP, Chromium's quality-limitation reason, and the latest Auto decision—plus fullscreen, reconnect, and diagnostics-copy controls.
-
-For the native menu-bar interface, run:
+## Development
 
 ```bash
-.build/release/virtual-display-stream-app
+cd PixelFerryStreamer
+npm ci
+npm run build
+npm test
+cd ..
+
+swift build
+swift test
+swift run pixelferry --streamer-directory PixelFerryStreamer
 ```
 
-The menu-bar app persists display and streaming settings, shows helper/viewer status, provides LAN addresses and a QR code, and links to Screen Recording settings. It runs as an accessory application without a Dock icon. Electron remains a hidden capture/WebRTC helper and is also removed from the Dock.
+Open the URL printed by the command on another device. The default streamer uses Electron/Chromium capture and WebRTC. `--backend native` keeps the experimental ScreenCaptureKit/libwebrtc implementation available.
 
-The helper uses Chromium `desktopCapturer`/`getUserMedia` and `simple-peer`, with manual 100%/50% modes and an experimental Auto mode. Auto combines motion, receiver buffering/loss, sender RTT, encoding time, and Chromium limitation signals. It first adjusts sender bitrate/FPS, then uses guarded 75%/50% capture transitions under sustained pressure. Use `--chromium-directory <path>` when launching outside the repository root. The earlier ScreenCaptureKit/libwebrtc path remains available through `--backend native`.
+Build the complete Universal 2 app, embedded streamer, ad-hoc signature, and ZIP on macOS:
 
-If Electron reports an incomplete installation, rerun `npm install` in `ChromiumStreamer`. The launcher uses Electron's supported CLI entry point instead of assuming a version-specific `.app` layout.
+```bash
+bash scripts/build-release.sh
+```
 
-Use `virtual-display-stream --help` for display, WebRTC SDP bandwidth, port, HiDPI, and cursor options. Defaults follow Deskreen's LAN-oriented profile: 60 FPS, an effectively unrestricted 500 Mbps SDP video bandwidth, VP8 preference, and no STUN/TURN servers. Only one browser viewer is supported. `/healthz` provides basic JSON status.
+Artifacts are written to `dist/PixelFerry.app` and `dist/PixelFerry-0.1.0-macOS-universal.zip`. The CLI remains available from SwiftPM development builds.
 
-## Permissions and limitations
+## Security boundary
 
-On first launch, approve Screen Recording in **System Settings → Privacy & Security → Screen Recording**, then restart the command. The server has no TLS, authentication, discovery, audio, remote input, relay, or STUN/TURN service. WebRTC encrypts media by protocol, but the page and signaling channel are unauthenticated and unencrypted. Direct host ICE candidates also mean peers must be mutually reachable on the LAN.
+PixelFerry is for trusted local networks only. HTTP and Socket.IO signaling are plaintext and unauthenticated. WebRTC encrypts media in transit, but anyone who can reach the listener can attempt to connect. Do not expose the port to the internet or an untrusted Wi-Fi network.
 
-`CGVirtualDisplay` is private, undocumented, and may change without notice. This package deliberately has no sandbox/signing/App Store configuration. Real display creation, TCC permission, hardware encoding, and playback must be tested on the target Mac; macOS frameworks are unavailable on Linux.
+## Documentation
 
-## License and references
+- [Architecture](Documentation/ARCHITECTURE.md)
+- [Building and packaging](Documentation/BUILDING.md)
+- [Troubleshooting](Documentation/TROUBLESHOOTING.md)
+- [Security policy](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Chinese README / 中文说明](README.zh-CN.md)
+- [Historical implementation research](docs/IMPLEMENTATION_RESEARCH.md)
 
-Project code is MIT licensed. The private API declarations and lifecycle patterns are derived from the MIT-licensed DeskPad and VirtualDisplayKit projects; see [NOTICE](NOTICE). Deskreen was used only as architectural research and no AGPL source is included.
+## License
+
+PixelFerry is MIT licensed. DeskPad and VirtualDisplayKit informed the private API declarations and lifecycle; Deskreen was consulted only as historical architectural research. See [NOTICE](NOTICE).

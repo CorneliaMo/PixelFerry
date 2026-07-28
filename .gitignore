@@ -10,9 +10,13 @@
 *.xcuserstate
 xcuserdata/
 
-# Chromium helper build products
+# PixelFerry build products
 /ChromiumStreamer/node_modules/
 /ChromiumStreamer/dist/
+/PixelFerryStreamer/node_modules/
+/PixelFerryStreamer/dist/
+/PixelFerryStreamer/out/
+/dist/
 
 # macOS metadata
 .DS_Store

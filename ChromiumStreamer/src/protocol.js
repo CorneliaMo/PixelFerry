@@ -31,8 +31,12 @@ function decodeMessage(value) {
       if (!validNumber(parsed.maxBitrateBps, 100_000, 1_000_000_000)) return null;
     } else if (parsed.type === 'quality-applied') {
       if (!Number.isSafeInteger(parsed.sequence) || parsed.sequence < 0 || !validProfile(parsed.profile)) return null;
+      if (!validNumber(parsed.scale, 0.25, 1)) return null;
       if (!validNumber(parsed.trackWidth, 1, 32_768) || !validNumber(parsed.trackHeight, 1, 32_768)) return null;
       if (!validNumber(parsed.maxFps, 1, 240) || !validNumber(parsed.maxBitrateBps, 100_000, 1_000_000_000)) return null;
+    } else if (parsed.type === 'quality-failed') {
+      if (!Number.isSafeInteger(parsed.sequence) || parsed.sequence < 0 || !validProfile(parsed.profile)) return null;
+      if (typeof parsed.reason !== 'string' || parsed.reason.length < 1 || parsed.reason.length > 256) return null;
     } else if (parsed.type === 'host-stats') {
       if (!validStatsSample(parsed.sample)) return null;
     } else {

@@ -7,6 +7,8 @@ test('allows future bounded capture scales and rejects unknown message types', (
 test('strictly validates host telemetry and quality acknowledgements', () => {
   assert.ok(decodeMessage(encodeMessage({ type:'host-stats',sample:{ timestamp:10,bitrateBps:500_000,packetLossRate:.01,qualityLimitationReason:'none' } })));
   assert.equal(decodeMessage(encodeMessage({ type:'host-stats',sample:{ timestamp:10,packetLossRate:2 } })), null);
-  assert.ok(decodeMessage(encodeMessage({ type:'quality-applied',sequence:1,profile:'detail',trackWidth:1920,trackHeight:1080,maxFps:60,maxBitrateBps:5_000_000 })));
-  assert.equal(decodeMessage(encodeMessage({ type:'quality-applied',sequence:1,profile:'detail',trackWidth:0,trackHeight:1080,maxFps:60,maxBitrateBps:5_000_000 })), null);
+  assert.ok(decodeMessage(encodeMessage({ type:'quality-applied',sequence:1,profile:'detail',scale:1,trackWidth:1920,trackHeight:1080,maxFps:60,maxBitrateBps:5_000_000 })));
+  assert.equal(decodeMessage(encodeMessage({ type:'quality-applied',sequence:1,profile:'detail',scale:1,trackWidth:0,trackHeight:1080,maxFps:60,maxBitrateBps:5_000_000 })), null);
+  assert.ok(decodeMessage(encodeMessage({ type:'quality-failed',sequence:1,profile:'motion',reason:'capture timeout' })));
+  assert.equal(decodeMessage(encodeMessage({ type:'quality-failed',sequence:1,profile:'motion',reason:'' })), null);
 });

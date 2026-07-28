@@ -6,11 +6,12 @@ import { setVideoBandwidth } from './sdp.js';
 import { StatsSampler } from './webrtc-stats.js';
 
 const video = document.querySelector('#video'); const canvas = document.querySelector('#sample'); const state = document.querySelector('#state');
-const ids = ['codec', 'fps', 'rate', 'buffer', 'profile', 'rtt', 'loss', 'qp', 'limitation', 'resolution', 'decision'];
+const ids = ['codec', 'fps', 'rate', 'buffer', 'requested-profile', 'applied-profile', 'rtt', 'loss', 'qp', 'limitation', 'resolution', 'decision'];
 const fields = Object.fromEntries(ids.map((id) => [id, document.querySelector(`#${id}`)]));
 const baseBitrateBps = window.streamConfiguration?.bitrate || 500_000_000; const baseFps = window.streamConfiguration?.fps || 60;
 let socket; let peer; let quality = '1'; let hostSample; let receiverSample; let motionRatio = 0; let sequence = 0;
 let receiverStatsPending = false;
+let lastAppliedProfile = 'detail'; let pendingQualitySequence = -1; let autoSuppressedUntil = -Infinity;
 const history = []; const sampler = new StatsSampler('inbound'); const motionSampler = new MotionSampler(video, canvas);
 const controller = new AdaptiveQualityController({ baseBitrateBps, baseFps });
 
@@ -23,13 +24,30 @@ function record(sample) {
 }
 function requestProfile(profile, reason, resolvedSettings) {
   const settings = resolvedSettings || profileSettings(profile, baseBitrateBps, baseFps); sequence += 1;
-  send({ type: 'quality-command', sequence, ...settings }); fields.decision.textContent = reason; fields.profile.textContent = profile.toUpperCase();
+  pendingQualitySequence = sequence;
+  send({ type: 'quality-command', sequence, ...settings }); fields.decision.textContent = reason;
+  fields['requested-profile'].textContent = `${profile.toUpperCase()} @${Math.round(settings.scale * 100)}%`;
   record({ at: new Date().toISOString(), type: 'decision', reason, ...settings });
 }
 function onData(bytes) {
   const message = decodeMessage(bytes); if (!message) return;
   if (message.type === 'host-stats') hostSample = message.sample;
-  if (message.type === 'quality-applied') record({ at: new Date().toISOString(), ...message });
+  if (message.type === 'quality-applied') {
+    record({ at: new Date().toISOString(), ...message });
+    if (message.sequence === pendingQualitySequence) {
+      lastAppliedProfile = message.profile;
+      fields['applied-profile'].textContent = `${message.profile.toUpperCase()} @${Math.round(message.scale * 100)}%`;
+      fields.decision.textContent = 'applied';
+    }
+  }
+  if (message.type === 'quality-failed') {
+    record({ at: new Date().toISOString(), ...message });
+    if (message.sequence === pendingQualitySequence) {
+      controller.reset(lastAppliedProfile); autoSuppressedUntil = performance.now() + 10_000;
+      fields['requested-profile'].textContent = 'FAILED';
+      fields.decision.textContent = `transition failed: ${message.reason}`;
+    }
+  }
 }
 function connect() {
   peer?.destroy(); socket?.disconnect(); sampler.reset(); controller.reset(); hostSample = undefined; receiverSample = undefined; setState('CONNECTING');
@@ -44,7 +62,10 @@ function connect() {
 document.querySelectorAll('[data-quality]').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('[data-quality]').forEach((item) => item.classList.toggle('active', item === button));
   quality = button.dataset.quality; controller.reset(); motionSampler.reset();
-  if (quality === 'auto') { requestManualQuality(1); requestProfile('detail', 'auto-enabled'); } else { requestManualQuality(Number(quality)); fields.profile.textContent = `${Number(quality) * 100}%`; fields.decision.textContent = 'manual'; }
+  if (quality === 'auto') { requestProfile('detail', 'auto-enabled'); } else {
+    requestManualQuality(Number(quality)); fields['requested-profile'].textContent = `${Number(quality) * 100}%`;
+    fields['applied-profile'].textContent = `${Number(quality) * 100}%`; fields.decision.textContent = 'manual';
+  }
 }));
 document.querySelector('#reconnect').addEventListener('click', connect);
 document.querySelector('#fullscreen').addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen()).catch(() => {}));
@@ -66,7 +87,9 @@ setInterval(async () => {
   fields.qp.textContent = hostSample?.averageQp === undefined ? '—' : hostSample.averageQp.toFixed(1); fields.limitation.textContent = hostSample?.qualityLimitationReason || '—';
   fields.resolution.textContent = `${video.videoWidth || 0}×${video.videoHeight || 0}`;
   const snapshot = { at: new Date().toISOString(), type: 'stats', motionRatio, receiver: receiverSample, host: hostSample }; record(snapshot);
-  if (quality === 'auto') { const decision = controller.observe(snapshot, performance.now()); if (decision) requestProfile(decision.profile, decision.reason, decision.settings); }
+  if (quality === 'auto' && performance.now() >= autoSuppressedUntil) {
+    const decision = controller.observe(snapshot, performance.now()); if (decision) requestProfile(decision.profile, decision.reason, decision.settings);
+  }
   } catch (error) { console.error('WebRTC receiver stats failed', error); }
   finally { receiverStatsPending = false; }
 }, 500);

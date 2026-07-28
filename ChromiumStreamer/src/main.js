@@ -78,6 +78,10 @@ function startServer() {
 }
 
 app.whenReady().then(async () => {
+  if (process.platform === 'darwin') {
+    app.setActivationPolicy?.('accessory');
+    app.dock?.hide();
+  }
   options = parseArgs(process.argv.slice(2));
   startServer();
   await createHost();

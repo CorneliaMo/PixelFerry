@@ -4,7 +4,7 @@ const { AdaptiveQualityController } = require('../src/adaptive-quality-controlle
 
 test('drops two profiles immediately for severe congestion', () => {
   const controller = new AdaptiveQualityController();
-  assert.deepEqual(controller.observe({ receiver: { playoutDelayMs: 150 }, motionRatio: 0 }, 0), { profile: 'motion', reason: 'severe-congestion', settings: { profile:'motion',scale:1,maxBitrateBps:300_000_000,maxFps:60 } });
+  assert.deepEqual(controller.observe({ receiver: { playoutDelayMs: 150 }, motionRatio: 0 }, 0), { profile: 'motion', reason: 'severe-congestion', settings: { profile:'motion',scale:0.75,maxBitrateBps:300_000_000,maxFps:60 } });
 });
 test('requires sustained pressure and respects downgrade cooldown', () => {
   const controller = new AdaptiveQualityController(); const sample = { receiver: { packetLossRate: 0.04 }, motionRatio: 0 };

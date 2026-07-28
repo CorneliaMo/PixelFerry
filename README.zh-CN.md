@@ -8,7 +8,7 @@ PixelFerry 在 macOS 上创建可配置的虚拟显示器，并通过低延迟 W
 
 - Apple Silicon 或 Intel Mac，macOS 15 或更高版本
 - Xcode 16 或更高版本
-- 源码构建需要 Node.js 22 和 npm
+- 源码构建需要 Node.js 22.12 或更高版本及 npm
 - 屏幕录制权限
 - 同一可信局域网中的现代浏览器
 
@@ -34,7 +34,8 @@ swift run pixelferry --streamer-directory PixelFerryStreamer
 bash scripts/build-release.sh
 ```
 
-产物位于 `dist/PixelFerry.app` 和 `dist/PixelFerry-0.1.0-macOS-universal.zip`。CLI 仍可从 SwiftPM 开发构建中使用。
+产物位于 `dist/PixelFerry.app`、`dist/PixelFerry-0.1.0-macOS-universal.zip` 和 `dist/build-manifest.txt`。CLI 仍可从 SwiftPM 开发构建中使用。
+运行 `bash scripts/build-release.sh --help` 可查看测试、依赖、输出目录和签名选项。
 
 ## 安全边界
 

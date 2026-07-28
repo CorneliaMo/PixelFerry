@@ -1,0 +1,2 @@
+"NSLocalNetworkUsageDescription" = "PixelFerry 将虚拟显示器画面共享给局域网中的浏览器。";
+"NSScreenCaptureUsageDescription" = "PixelFerry Streamer 需要捕获 PixelFerry 虚拟显示器以进行浏览器串流。";

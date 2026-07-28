@@ -8,7 +8,7 @@ PixelFerry creates a configurable virtual display on macOS and ferries its pixel
 
 - macOS 15 or newer on Apple silicon or Intel
 - Xcode 16 or newer
-- Node.js 22 and npm for source builds
+- Node.js 22.12 or newer and npm for source builds
 - Screen Recording permission
 - A modern browser on the same trusted LAN
 
@@ -34,7 +34,8 @@ Build the complete Universal 2 app, embedded streamer, ad-hoc signature, and ZIP
 bash scripts/build-release.sh
 ```
 
-Artifacts are written to `dist/PixelFerry.app` and `dist/PixelFerry-0.1.0-macOS-universal.zip`. The CLI remains available from SwiftPM development builds.
+Artifacts are written to `dist/PixelFerry.app`, `dist/PixelFerry-0.1.0-macOS-universal.zip`, and `dist/build-manifest.txt`. The CLI remains available from SwiftPM development builds.
+Use `bash scripts/build-release.sh --help` for test, dependency, output-directory, and signing options.
 
 ## Security boundary
 

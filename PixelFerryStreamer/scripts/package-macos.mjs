@@ -1,4 +1,4 @@
-import { rm, mkdir } from 'node:fs/promises';
+import { rm, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { packager } from '@electron/packager';
@@ -7,6 +7,12 @@ import { makeUniversalApp } from '@electron/universal';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'out');
 const universal = path.join(output, 'universal', 'PixelFerry Streamer.app');
+const manifest = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const buildVersion = process.env.PIXELFERRY_BUILD_NUMBER || '1';
+
+if (!/^[1-9][0-9]*$/.test(buildVersion)) {
+  throw new Error('PIXELFERRY_BUILD_NUMBER must be a positive integer');
+}
 
 await rm(output, { recursive: true, force: true });
 await mkdir(path.dirname(universal), { recursive: true });
@@ -18,9 +24,13 @@ const common = {
   platform: 'darwin',
   appBundleId: 'cn.corneliamo.PixelFerry.Streamer',
   appCategoryType: 'public.app-category.utilities',
-  appVersion: '0.1.0',
-  buildVersion: '1',
+  appVersion: manifest.version,
+  buildVersion,
   icon: process.env.PIXELFERRY_ICON || undefined,
+  extraResource: [
+    path.join(root, 'resources', 'en.lproj'),
+    path.join(root, 'resources', 'zh-Hans.lproj'),
+  ],
   asar: true,
   overwrite: true,
   prune: true,
@@ -34,6 +44,7 @@ const common = {
   },
   ignore: [
     /^\/out($|\/)/,
+    /^\/resources($|\/)/,
     /^\/test($|\/)/,
     /^\/scripts($|\/)/,
   ],

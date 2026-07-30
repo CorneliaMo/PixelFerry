@@ -105,8 +105,12 @@ final class StreamAppModel: ObservableObject {
     }
 
     private func configuration(from settings: AppSettings) throws -> StreamConfiguration {
-        guard settings.width > 0, settings.width <= Int(UInt32.max), settings.width.isMultiple(of: 2),
-              settings.height > 0, settings.height <= Int(UInt32.max), settings.height.isMultiple(of: 2) else {
+        guard settings.width > 0, settings.width.isMultiple(of: 2),
+              settings.height > 0, settings.height.isMultiple(of: 2),
+              (!settings.hiDPI ||
+               (settings.width <= Int(UInt32.max) / 2 && settings.height <= Int(UInt32.max) / 2)),
+              (settings.hiDPI ||
+               (settings.width <= Int(UInt32.max) && settings.height <= Int(UInt32.max))) else {
             throw ValidationError(String(localized: "validation.dimensions", bundle: .module))
         }
         guard (1...240).contains(settings.fps) else {

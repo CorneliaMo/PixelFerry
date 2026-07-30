@@ -48,8 +48,8 @@ public enum CLIParser {
     public static let usage = """
     Usage: pixelferry [options]
       --name <text>          Display name (default: PixelFerry Display)
-      --width <pixels>       Even display width (default: 1920)
-      --height <pixels>      Even display height (default: 1080)
+      --width <points>       Even logical display width (default: 1920)
+      --height <points>      Even logical display height (default: 1080)
       --refresh-rate <hz>    Refresh rate (default: 60)
       --hidpi                Enable HiDPI mode
       --fps <frames>         Encoder frame rate (default: 60)
@@ -92,8 +92,9 @@ public enum CLIParser {
             }
             index += 1
         }
-        guard value.width <= Int(UInt32.max) else { throw CLIError.invalidValue("--width", String(value.width)) }
-        guard value.height <= Int(UInt32.max) else { throw CLIError.invalidValue("--height", String(value.height)) }
+        guard DisplayModePlan.make(width: value.width, height: value.height, hiDPI: value.hiDPI) != nil else {
+            throw CLIError.invalidValue("--width/--height", "\(value.width)x\(value.height)")
+        }
         guard value.fps <= 240 else { throw CLIError.invalidValue("--fps", String(value.fps)) }
         guard (100_000...1_000_000_000).contains(value.bitrate) else { throw CLIError.invalidValue("--bitrate", String(value.bitrate)) }
         guard value.width.isMultiple(of: 2) else { throw CLIError.invalidValue("--width", String(value.width)) }

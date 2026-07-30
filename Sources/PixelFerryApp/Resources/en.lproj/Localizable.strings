@@ -10,13 +10,13 @@
 "viewer.open" = "Open on another device";
 "warning.trusted_lan" = "Trusted LAN only: signaling is plaintext and unauthenticated.";
 "field.display_name" = "Display name";
-"field.width" = "Width";
-"field.height" = "Height";
+"field.width" = "Logical width";
+"field.height" = "Logical height";
 "field.display_hz" = "Display Hz";
 "field.stream_fps" = "Stream FPS";
 "field.bitrate_mbps" = "Bitrate Mbps";
 "field.port" = "Port";
-"field.hidpi" = "HiDPI";
+"field.hidpi" = "HiDPI (2× framebuffer)";
 "field.show_cursor" = "Show cursor";
 "metric.display" = "DISPLAY";
 "metric.viewer" = "VIEWER";

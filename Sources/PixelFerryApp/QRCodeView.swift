@@ -16,7 +16,7 @@ struct QRCodeView: View {
                 .scaledToFit()
                 .accessibilityLabel(
                     String(
-                        format: String(localized: "accessibility.qr_code", bundle: .module),
+                        format: String(localized: "accessibility.qr_code", bundle: .pixelFerryAppResources),
                         locale: .current,
                         value
                     )

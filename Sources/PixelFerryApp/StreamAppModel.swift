@@ -14,11 +14,11 @@ final class StreamAppModel: ObservableObject {
 
         var label: String {
             switch self {
-            case .stopped: String(localized: "state.stopped", bundle: .module)
-            case .starting: String(localized: "state.starting", bundle: .module)
-            case .running: String(localized: "state.running", bundle: .module)
-            case .stopping: String(localized: "state.stopping", bundle: .module)
-            case .failed: String(localized: "state.error", bundle: .module)
+            case .stopped: String(localized: "state.stopped", bundle: .pixelFerryAppResources)
+            case .starting: String(localized: "state.starting", bundle: .pixelFerryAppResources)
+            case .running: String(localized: "state.running", bundle: .pixelFerryAppResources)
+            case .stopping: String(localized: "state.stopping", bundle: .pixelFerryAppResources)
+            case .failed: String(localized: "state.error", bundle: .pixelFerryAppResources)
             }
         }
     }
@@ -111,22 +111,22 @@ final class StreamAppModel: ObservableObject {
                (settings.width <= Int(UInt32.max) / 2 && settings.height <= Int(UInt32.max) / 2)),
               (settings.hiDPI ||
                (settings.width <= Int(UInt32.max) && settings.height <= Int(UInt32.max))) else {
-            throw ValidationError(String(localized: "validation.dimensions", bundle: .module))
+            throw ValidationError(String(localized: "validation.dimensions", bundle: .pixelFerryAppResources))
         }
         guard (1...240).contains(settings.fps) else {
-            throw ValidationError(String(localized: "validation.fps", bundle: .module))
+            throw ValidationError(String(localized: "validation.fps", bundle: .pixelFerryAppResources))
         }
         guard (1...65_535).contains(settings.port) else {
-            throw ValidationError(String(localized: "validation.port", bundle: .module))
+            throw ValidationError(String(localized: "validation.port", bundle: .pixelFerryAppResources))
         }
         guard (1...1_000).contains(settings.bitrateMbps) else {
-            throw ValidationError(String(localized: "validation.bitrate", bundle: .module))
+            throw ValidationError(String(localized: "validation.bitrate", bundle: .pixelFerryAppResources))
         }
         guard settings.refreshRate.isFinite, settings.refreshRate > 0 else {
-            throw ValidationError(String(localized: "validation.refresh_rate", bundle: .module))
+            throw ValidationError(String(localized: "validation.refresh_rate", bundle: .pixelFerryAppResources))
         }
         guard !settings.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ValidationError(String(localized: "validation.name", bundle: .module))
+            throw ValidationError(String(localized: "validation.name", bundle: .pixelFerryAppResources))
         }
         var value = StreamConfiguration()
         value.name = settings.name
@@ -185,7 +185,7 @@ final class StreamAppModel: ObservableObject {
         case .signaling(let value): key = "error.signaling"; detail = value
         case .streamerHelper(let value): key = "error.streamer"; detail = value
         }
-        let format = String(localized: key, bundle: .module)
+        let format = String(localized: key, bundle: .pixelFerryAppResources)
         return detail.map { String(format: format, locale: .current, $0) } ?? format
     }
 }

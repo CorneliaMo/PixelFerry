@@ -20,4 +20,10 @@ function parseArgs(argv) {
   return result;
 }
 
-module.exports = { parseArgs };
+function helperArgs(processArgv, isPackaged) {
+  // Development: Electron argv is [executable, appDirectory, ...options].
+  // Packaged app: argv is [appExecutable, ...options].
+  return processArgv.slice(isPackaged ? 1 : 2);
+}
+
+module.exports = { helperArgs, parseArgs };

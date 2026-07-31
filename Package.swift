@@ -3,11 +3,15 @@ import PackageDescription
 
 let package = Package(
     name: "PixelFerry",
+    defaultLocalization: "en",
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "PixelFerryCore", targets: ["PixelFerryCore"]),
         .executable(name: "pixelferry", targets: ["PixelFerryCLI"]),
-        .executable(name: "PixelFerry", targets: ["PixelFerryApp"]),
+        // Keep this SwiftPM product name distinct from `pixelferry` on the
+        // default case-insensitive macOS filesystem. The release script still
+        // packages the resulting executable as PixelFerry.app/…/PixelFerry.
+        .executable(name: "PixelFerryApp", targets: ["PixelFerryApp"]),
     ],
     dependencies: [
         .package(url: "https://github.com/stasel/WebRTC.git", exact: "150.0.0"),

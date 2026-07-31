@@ -5,7 +5,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
-const { parseArgs } = require('./args');
+const { helperArgs, parseArgs } = require('./args');
 
 let options;
 let hostWindow;
@@ -82,7 +82,7 @@ app.whenReady().then(async () => {
     app.setActivationPolicy?.('accessory');
     app.dock?.hide();
   }
-  options = parseArgs(process.argv.slice(2));
+  options = parseArgs(helperArgs(process.argv, app.isPackaged));
   startServer();
   await createHost();
 }).catch((error) => { console.error(error); app.exit(1); });

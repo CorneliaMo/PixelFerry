@@ -10,13 +10,13 @@
 "viewer.open" = "在其他设备上打开";
 "warning.trusted_lan" = "仅限可信局域网：信令使用明文且无身份验证。";
 "field.display_name" = "显示器名称";
-"field.width" = "宽度";
-"field.height" = "高度";
+"field.width" = "逻辑宽度";
+"field.height" = "逻辑高度";
 "field.display_hz" = "显示刷新率";
 "field.stream_fps" = "串流帧率";
 "field.bitrate_mbps" = "码率 Mbps";
 "field.port" = "端口";
-"field.hidpi" = "HiDPI";
+"field.hidpi" = "HiDPI（2 倍帧缓冲）";
 "field.show_cursor" = "显示光标";
 "metric.display" = "显示器";
 "metric.viewer" = "观看端";

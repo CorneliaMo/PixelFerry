@@ -33,7 +33,7 @@ struct MenuContentView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 7) {
                     Image(systemName: "display.and.arrow.down").frame(width: 18, height: 18)
-                    Text("app.name", bundle: .module).font(.headline)
+                    Text("app.name", bundle: .pixelFerryAppResources).font(.headline)
                 }
                 Text(model.state.label).font(.caption).foregroundStyle(statusColor)
             }
@@ -69,11 +69,11 @@ struct MenuContentView: View {
             Button {
                 Task { await model.start(settings: settings.value) }
             } label: {
-                Label(String(localized: "action.start", bundle: .module), systemImage: "play.fill").frame(maxWidth: .infinity)
+                Label(String(localized: "action.start", bundle: .pixelFerryAppResources), systemImage: "play.fill").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .disabled(model.state == .starting || model.state == .stopping)
-            Text("warning.trusted_lan", bundle: .module)
+            Text("warning.trusted_lan", bundle: .pixelFerryAppResources)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -96,11 +96,11 @@ struct MenuContentView: View {
                         .background(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("viewer.open", bundle: .module).font(.caption).foregroundStyle(.secondary)
+                        Text("viewer.open", bundle: .pixelFerryAppResources).font(.caption).foregroundStyle(.secondary)
                         Text(url.absoluteString)
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
-                        Button(String(localized: "action.copy", bundle: .module)) { model.copy(url) }
+                        Button(String(localized: "action.copy", bundle: .pixelFerryAppResources)) { model.copy(url) }
                     }
                 }
             } else {
@@ -117,7 +117,7 @@ struct MenuContentView: View {
             Button(role: .destructive) {
                 Task { await model.stop() }
             } label: {
-                Label(String(localized: "action.stop", bundle: .module), systemImage: "stop.fill").frame(maxWidth: .infinity)
+                Label(String(localized: "action.stop", bundle: .pixelFerryAppResources), systemImage: "stop.fill").frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
         }
@@ -181,6 +181,6 @@ struct MenuContentView: View {
     }
 
     private func l(_ key: String.LocalizationValue) -> String {
-        String(localized: key, bundle: .module)
+        String(localized: key, bundle: .pixelFerryAppResources)
     }
 }

@@ -38,6 +38,22 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 require_command() {
   command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
 }
+find_macos_framework() {
+  local search_root="$1"
+  local required_arch="$2"
+  local framework binary arches
+  while IFS= read -r framework; do
+    binary="$framework/WebRTC"
+    [[ -f "$binary" ]] || continue
+    xcrun vtool -show-build "$binary" 2>/dev/null |
+      grep -Eq '^[[:space:]]*platform[[:space:]]+MACOS$' || continue
+    arches=" $(lipo -archs "$binary") "
+    [[ "$arches" == *" $required_arch "* ]] || continue
+    printf '%s\n' "$framework"
+    return 0
+  done < <(find "$search_root" -type d -name WebRTC.framework -print)
+  return 1
+}
 
 while (($#)); do
   case "$1" in
@@ -71,7 +87,7 @@ done
 
 trap 'printf "\nerror: build failed at line %s\n" "$LINENO" >&2' ERR
 
-for command in awk codesign ditto find iconutil lipo npm node otool plutil \
+for command in awk codesign curl ditto find iconutil lipo npm node otool plutil \
   security shasum sips swift sw_vers xcodebuild xcode-select xcrun; do
   require_command "$command"
 done
@@ -84,7 +100,7 @@ xcrun --find swift >/dev/null ||
   die "the selected Xcode installation does not provide Swift"
 MACOS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
 ((MACOS_MAJOR >= 15)) || die "macOS 15 or newer is required"
-XCODE_MAJOR="$(xcodebuild -version | awk 'NR == 1 { split($2, v, \".\"); print v[1] }')"
+XCODE_MAJOR="$(xcodebuild -version | awk 'NR == 1 { split($2, v, "[.]"); print v[1] }')"
 ((XCODE_MAJOR >= 16)) || die "Xcode 16 or newer is required"
 read -r NODE_MAJOR NODE_MINOR < <(
   node -p "const [major, minor] = process.versions.node.split('.').map(Number); major + ' ' + minor"
@@ -184,7 +200,23 @@ cp -R "$PACKAGED_HELPER" "$CONTENTS/PlugIns/"
 
 if ((RUN_TESTS)); then
   log "Testing Swift package"
-  swift test --package-path "$ROOT"
+  TEST_BIN_PATH="$(swift build --package-path "$ROOT" --show-bin-path)"
+  STALE_TEST_FRAMEWORK="$TEST_BIN_PATH/PixelFerryCoreTests.xctest/Contents/Frameworks/WebRTC.framework"
+  rm -rf "$STALE_TEST_FRAMEWORK"
+  swift build --package-path "$ROOT" --build-tests
+  TEST_ARCH="$(uname -m)"
+  TEST_WEBRTC="$(find_macos_framework "$ROOT/.build" "$TEST_ARCH")" || true
+  [[ -n "$TEST_WEBRTC" ]] ||
+    die "a WebRTC.framework compatible with $TEST_ARCH was not found for Swift tests"
+  TEST_BUNDLE="$TEST_BIN_PATH/PixelFerryCoreTests.xctest"
+  [[ -d "$TEST_BUNDLE" ]] || die "PixelFerryCoreTests.xctest was not produced at $TEST_BUNDLE"
+  TEST_FRAMEWORKS="$TEST_BUNDLE/Contents/Frameworks"
+  mkdir -p "$TEST_FRAMEWORKS"
+  rm -rf "$TEST_FRAMEWORKS/WebRTC.framework"
+  ditto "$TEST_WEBRTC" "$TEST_FRAMEWORKS/WebRTC.framework"
+  codesign --force --sign - "$TEST_FRAMEWORKS/WebRTC.framework"
+  codesign --force --deep --sign - "$TEST_BUNDLE"
+  swift test --package-path "$ROOT" --skip-build
 fi
 
 build_swift_arch() {
@@ -213,11 +245,11 @@ build_swift_arch arm64
 build_swift_arch x86_64
 ARM_BIN="$(swift_bin_path arm64)"
 INTEL_BIN="$(swift_bin_path x86_64)"
-[[ -x "$ARM_BIN/PixelFerry" ]] || die "arm64 PixelFerry executable is missing"
-[[ -x "$INTEL_BIN/PixelFerry" ]] || die "x86_64 PixelFerry executable is missing"
+[[ -x "$ARM_BIN/PixelFerryApp" ]] || die "arm64 PixelFerryApp executable is missing"
+[[ -x "$INTEL_BIN/PixelFerryApp" ]] || die "x86_64 PixelFerryApp executable is missing"
 
 log "Creating Universal 2 application executable"
-lipo -create "$ARM_BIN/PixelFerry" "$INTEL_BIN/PixelFerry" \
+lipo -create "$ARM_BIN/PixelFerryApp" "$INTEL_BIN/PixelFerryApp" \
   -output "$CONTENTS/MacOS/PixelFerry"
 chmod 755 "$CONTENTS/MacOS/PixelFerry"
 
@@ -227,17 +259,17 @@ while IFS= read -r bundle; do
   [[ -n "$bundle" ]] || continue
   name="$(basename "$bundle")"
   cp -R "$bundle" "$CONTENTS/Resources/$name"
-  # SwiftPM executable resource accessors look next to Bundle.main.bundleURL.
-  cp -R "$bundle" "$APP/$name"
   RESOURCE_COUNT=$((RESOURCE_COUNT + 1))
 done < <(find "$ARM_BIN" -maxdepth 1 -type d -name '*.bundle' -print)
 ((RESOURCE_COUNT > 0)) || die "no SwiftPM resource bundles were produced"
-[[ -d "$APP/PixelFerry_PixelFerryApp.bundle" ]] ||
+[[ -d "$CONTENTS/Resources/PixelFerry_PixelFerryApp.bundle" ]] ||
   die "PixelFerryApp localization bundle is missing"
+[[ -d "$CONTENTS/Resources/PixelFerry_PixelFerryCore.bundle" ]] ||
+  die "PixelFerryCore web resource bundle is missing"
 
 log "Embedding WebRTC framework when dynamically linked"
-ARM_WEBRTC="$(find "$ROOT/.build/pixelferry-arm64" -type d -name WebRTC.framework -print -quit)"
-INTEL_WEBRTC="$(find "$ROOT/.build/pixelferry-x86_64" -type d -name WebRTC.framework -print -quit)"
+ARM_WEBRTC="$(find_macos_framework "$ROOT/.build/pixelferry-arm64" arm64)" || true
+INTEL_WEBRTC="$(find_macos_framework "$ROOT/.build/pixelferry-x86_64" x86_64)" || true
 if [[ -n "$ARM_WEBRTC" ]]; then
   cp -R "$ARM_WEBRTC" "$CONTENTS/Frameworks/WebRTC.framework"
   WEBRTC_BINARY="$CONTENTS/Frameworks/WebRTC.framework/WebRTC"

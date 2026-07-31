@@ -12,13 +12,22 @@ public final class VirtualDisplaySession {
     public func start(configuration: StreamConfiguration) async throws -> CGDirectDisplayID {
         guard display == nil else { return display!.displayID }
         try verifyPrivateAPI()
+        guard let modePlan = DisplayModePlan.make(
+            width: configuration.width,
+            height: configuration.height,
+            hiDPI: configuration.hiDPI
+        ) else {
+            throw StreamError.displaySettingsFailed
+        }
         let descriptor = CGVirtualDisplayDescriptor()
         descriptor.setDispatchQueue(.main)
         descriptor.name = configuration.name
-        descriptor.maxPixelsWide = UInt32(configuration.width)
-        descriptor.maxPixelsHigh = UInt32(configuration.height)
+        descriptor.maxPixelsWide = UInt32(modePlan.maximumPixelWidth)
+        descriptor.maxPixelsHigh = UInt32(modePlan.maximumPixelHeight)
         descriptor.sizeInMillimeters = CGSize(width: 600, height: 340)
-        descriptor.vendorID = 0x3456; descriptor.productID = 0x1234; descriptor.serialNum = 1
+        // Version the identity when mode semantics change so macOS does not
+        // restore the old one-pixel-per-point mode cached for serial 1.
+        descriptor.vendorID = 0x3456; descriptor.productID = 0x1234; descriptor.serialNum = 2
         descriptor.terminationHandler = { [weak self] _, _ in
             Task { @MainActor in self?.wasTerminated = true; self?.display = nil }
         }
@@ -26,7 +35,13 @@ public final class VirtualDisplaySession {
         guard created.displayID != 0 else { throw StreamError.displayCreationFailed }
         let settings = CGVirtualDisplaySettings()
         settings.hiDPI = configuration.hiDPI ? 1 : 0
-        settings.modes = [CGVirtualDisplayMode(width: UInt(configuration.width), height: UInt(configuration.height), refreshRate: configuration.refreshRate)]
+        settings.modes = modePlan.modes.map {
+            CGVirtualDisplayMode(
+                width: UInt($0.pixelWidth),
+                height: UInt($0.pixelHeight),
+                refreshRate: configuration.refreshRate
+            )
+        }
         guard created.apply(settings) else { throw StreamError.displaySettingsFailed }
         display = created
         let id = created.displayID
@@ -37,6 +52,7 @@ public final class VirtualDisplaySession {
             if ContinuousClock.now >= deadline { stop(); throw StreamError.displayRegistrationTimedOut }
             try await Task.sleep(for: .milliseconds(100))
         }
+        DisplayModeDiagnostics.record(displayID: id, requestedPlan: modePlan)
         return id
     }
 

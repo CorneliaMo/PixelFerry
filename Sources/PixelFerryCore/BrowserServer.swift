@@ -100,7 +100,7 @@ public final class BrowserServer: @unchecked Sendable {
     }
 
     private static func resource(_ name: String, extension ext: String, contentType: String) -> HttpResponse {
-        guard let url = Bundle.module.url(forResource: name, withExtension: ext),
+        guard let url = Bundle.pixelFerryCoreResources.url(forResource: name, withExtension: ext),
               let data = try? Data(contentsOf: url) else { return .internalServerError(nil) }
         return .ok(.data(data, contentType: contentType), ["Cache-Control": "no-store"])
     }
